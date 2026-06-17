@@ -1,0 +1,661 @@
+/*
+ * react-guided-journey default theme.
+ *
+ * Each token auto-adopts your existing brand variables if present (--brand,
+ * --color-primary, --accent-color …) and falls back to a sensible default.
+ * Override any --rgj-* variable directly, or pass the `theme` prop on the
+ * provider — both win over these defaults.
+ */
+:root {
+  --rgj-primary: var(
+    --brand,
+    var(--color-primary, var(--accent-color, #4f46e5))
+  );
+  --rgj-primary-contrast: var(--color-on-primary, #ffffff);
+  --rgj-surface: var(--color-surface, #ffffff);
+  --rgj-text: var(--color-text, #111827);
+  --rgj-text-muted: var(--color-text-muted, #6b7280);
+  --rgj-border: var(--color-border, #e5e7eb);
+  --rgj-backdrop: rgba(0, 0, 0, 0.6);
+  --rgj-radius: var(--radius, 12px);
+  --rgj-shadow: 0 10px 40px rgba(0, 0, 0, 0.18);
+  --rgj-z: 9990;
+  /* Step transition duration — override via the `transitionMs` config prop. */
+  --rgj-anim: 220ms;
+}
+
+.rgj-root {
+  position: fixed;
+  inset: 0;
+  z-index: var(--rgj-z);
+  font-family: inherit;
+}
+
+.rgj-sr-only {
+  position: absolute;
+  width: 1px;
+  height: 1px;
+  overflow: hidden;
+  clip: rect(0 0 0 0);
+  white-space: nowrap;
+}
+
+/* Overlays */
+.rgj-backdrop-btn,
+.rgj-backdrop {
+  position: fixed;
+  inset: 0;
+  border: 0;
+  padding: 0;
+  cursor: pointer;
+  background: transparent;
+  z-index: calc(var(--rgj-z) + 1);
+}
+.rgj-backdrop {
+  background: rgba(0, 0, 0, 0.2);
+  cursor: default;
+}
+.rgj-backdrop-dark {
+  background: var(--rgj-backdrop);
+}
+.rgj-dim {
+  position: fixed;
+  inset: 0;
+  background: var(--rgj-backdrop);
+  z-index: calc(var(--rgj-z) + 2);
+  pointer-events: none;
+}
+/* Constant dark layer with a hole cut at the target via clip-path. It stays
+   mounted across steps (the hole just moves), so the screen never flashes. */
+.rgj-dim2 {
+  position: fixed;
+  inset: 0;
+  z-index: calc(var(--rgj-z) + 2);
+  pointer-events: none;
+  background: var(--rgj-backdrop);
+}
+/* Highlight ring around the target — crossfades in per step (no sliding). */
+.rgj-ring {
+  position: fixed;
+  border-radius: 8px;
+  z-index: calc(var(--rgj-z) + 3);
+  pointer-events: none;
+  box-shadow:
+    0 0 0 2px rgba(255, 255, 255, 0.92),
+    0 0 0 6px color-mix(in srgb, var(--rgj-primary) 30%, transparent);
+  animation: rgj-fade var(--rgj-anim) ease both;
+}
+
+/* Tooltip */
+.rgj-tooltip {
+  position: fixed;
+  z-index: calc(var(--rgj-z) + 4);
+  background: var(--rgj-surface);
+  color: var(--rgj-text);
+  border: 1px solid var(--rgj-border);
+  border-radius: var(--rgj-radius);
+  box-shadow: var(--rgj-shadow);
+}
+.rgj-hidden {
+  opacity: 0;
+  pointer-events: none;
+}
+.rgj-in {
+  animation: rgj-pop var(--rgj-anim) ease both;
+}
+.rgj-arrow {
+  position: absolute;
+  width: 14px;
+  height: 14px;
+  background: var(--rgj-surface);
+  border: 1px solid var(--rgj-border);
+  transform: rotate(45deg);
+}
+.rgj-arrow-top {
+  top: -7px;
+  margin-left: -7px;
+  border-bottom: 0;
+  border-right: 0;
+}
+.rgj-arrow-bottom {
+  bottom: -7px;
+  margin-left: -7px;
+  border-top: 0;
+  border-left: 0;
+}
+.rgj-arrow-left {
+  left: -7px;
+  margin-top: -7px;
+  border-top: 0;
+  border-right: 0;
+}
+.rgj-arrow-right {
+  right: -7px;
+  margin-top: -7px;
+  border-bottom: 0;
+  border-left: 0;
+}
+
+.rgj-header {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 16px 18px 0;
+}
+.rgj-badge {
+  font-size: 12px;
+  font-weight: 600;
+  color: var(--rgj-primary);
+  background: color-mix(in srgb, var(--rgj-primary) 12%, transparent);
+  padding: 2px 8px;
+  border-radius: 999px;
+}
+.rgj-body {
+  padding: 10px 18px 4px;
+}
+.rgj-step-title {
+  margin: 0 0 6px;
+  font-size: 15px;
+  font-weight: 600;
+}
+.rgj-step-content {
+  margin: 0;
+  font-size: 13px;
+  line-height: 1.55;
+  color: var(--rgj-text-muted);
+}
+.rgj-footer {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 14px 18px;
+}
+.rgj-actions {
+  display: flex;
+  gap: 8px;
+}
+.rgj-dots {
+  display: flex;
+  justify-content: center;
+  gap: 6px;
+  padding-bottom: 14px;
+}
+.rgj-dot {
+  width: 6px;
+  height: 6px;
+  border-radius: 999px;
+  background: var(--rgj-border);
+  transition: all 0.2s ease;
+}
+.rgj-dot-active {
+  width: 16px;
+  background: var(--rgj-primary);
+}
+
+/* Buttons */
+.rgj-btn {
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+  padding: 7px 14px;
+  border-radius: 8px;
+  border: 1px solid var(--rgj-border);
+  background: var(--rgj-surface);
+  color: var(--rgj-text);
+  cursor: pointer;
+}
+.rgj-btn:hover {
+  background: color-mix(in srgb, var(--rgj-text) 5%, var(--rgj-surface));
+}
+.rgj-btn-primary {
+  background: var(--rgj-primary);
+  border-color: var(--rgj-primary);
+  color: var(--rgj-primary-contrast);
+}
+.rgj-btn-primary:hover {
+  background: color-mix(in srgb, var(--rgj-primary) 88%, #000);
+}
+.rgj-btn-sm {
+  padding: 5px 10px;
+  font-size: 12px;
+}
+.rgj-btn-ghost {
+  background: transparent;
+  border-color: transparent;
+  color: var(--rgj-primary);
+}
+.rgj-btn-block {
+  width: 100%;
+  margin-top: 10px;
+}
+.rgj-skip {
+  font: inherit;
+  font-size: 12px;
+  color: var(--rgj-text-muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 0;
+}
+.rgj-skip:hover {
+  text-decoration: underline;
+}
+.rgj-close {
+  font-size: 14px;
+  line-height: 1;
+  color: var(--rgj-text-muted);
+  background: none;
+  border: 0;
+  cursor: pointer;
+  padding: 4px;
+  border-radius: 6px;
+}
+.rgj-close:hover {
+  background: color-mix(in srgb, var(--rgj-text) 8%, transparent);
+}
+
+/* Checklist pill */
+.rgj-pill {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: var(--rgj-z);
+  display: flex;
+  align-items: center;
+  gap: 10px;
+  padding: 10px 16px 10px 10px;
+  border-radius: 999px;
+  border: 1px solid var(--rgj-border);
+  background: var(--rgj-surface);
+  color: var(--rgj-text);
+  box-shadow: var(--rgj-shadow);
+  cursor: pointer;
+  font: inherit;
+  font-size: 13px;
+  font-weight: 500;
+}
+.rgj-pill-ring {
+  display: grid;
+  place-items: center;
+  width: 34px;
+  height: 34px;
+  border-radius: 999px;
+  background: color-mix(in srgb, var(--rgj-primary) 12%, transparent);
+  color: var(--rgj-primary);
+  font-size: 11px;
+  font-weight: 700;
+}
+
+/* Checklist panel */
+.rgj-checklist {
+  position: fixed;
+  right: 20px;
+  bottom: 20px;
+  z-index: var(--rgj-z);
+  width: 360px;
+  max-width: calc(100vw - 40px);
+  background: var(--rgj-surface);
+  color: var(--rgj-text);
+  border: 1px solid var(--rgj-border);
+  border-radius: var(--rgj-radius);
+  box-shadow: var(--rgj-shadow);
+  overflow: hidden;
+  animation: rgj-pop 0.2s ease both;
+}
+.rgj-checklist-head {
+  display: flex;
+  align-items: flex-start;
+  justify-content: space-between;
+  padding: 16px 18px 12px;
+}
+.rgj-checklist-title {
+  margin: 0;
+  font-size: 14px;
+  font-weight: 600;
+}
+.rgj-checklist-sub {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--rgj-text-muted);
+}
+.rgj-progress {
+  height: 5px;
+  background: var(--rgj-border);
+  margin: 0 18px;
+  border-radius: 999px;
+  overflow: hidden;
+}
+.rgj-progress-bar {
+  height: 100%;
+  background: var(--rgj-primary);
+  transition: width 0.4s ease;
+}
+.rgj-checklist-list {
+  list-style: none;
+  margin: 12px 0 0;
+  padding: 0 8px 12px;
+  max-height: 50vh;
+  overflow-y: auto;
+}
+.rgj-task {
+  display: flex;
+  align-items: flex-start;
+  gap: 10px;
+  padding: 10px;
+  border-radius: 8px;
+}
+.rgj-task:hover {
+  background: color-mix(in srgb, var(--rgj-text) 4%, transparent);
+}
+.rgj-check {
+  flex: none;
+  width: 20px;
+  height: 20px;
+  border-radius: 999px;
+  border: 1.5px solid var(--rgj-border);
+  display: grid;
+  place-items: center;
+  font-size: 11px;
+  color: var(--rgj-primary-contrast);
+}
+.rgj-task-done .rgj-check {
+  background: var(--rgj-primary);
+  border-color: var(--rgj-primary);
+}
+.rgj-task-body {
+  flex: 1;
+  min-width: 0;
+}
+.rgj-task-title {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+.rgj-task-done .rgj-task-title {
+  color: var(--rgj-text-muted);
+  text-decoration: line-through;
+}
+.rgj-task-desc {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--rgj-text-muted);
+}
+.rgj-task-actions {
+  display: flex;
+  flex-direction: column;
+  gap: 4px;
+}
+
+/* Help center drawer */
+.rgj-help {
+  position: fixed;
+  right: 0;
+  top: 0;
+  height: 100%;
+  width: 380px;
+  max-width: 100vw;
+  z-index: calc(var(--rgj-z) + 1);
+  background: var(--rgj-surface);
+  color: var(--rgj-text);
+  box-shadow: var(--rgj-shadow);
+  display: flex;
+  flex-direction: column;
+  animation: rgj-slide 0.25s ease both;
+}
+.rgj-help-head {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  padding: 18px 20px;
+  border-bottom: 1px solid var(--rgj-border);
+}
+.rgj-help-title {
+  margin: 0;
+  font-size: 15px;
+  font-weight: 600;
+}
+.rgj-help-body {
+  flex: 1;
+  overflow-y: auto;
+  padding: 20px;
+  display: flex;
+  flex-direction: column;
+  gap: 24px;
+}
+.rgj-help-progress {
+  border: 1px solid var(--rgj-border);
+  border-radius: var(--rgj-radius);
+  padding: 16px;
+}
+.rgj-help-progress-head {
+  display: flex;
+  justify-content: space-between;
+  font-size: 13px;
+  font-weight: 600;
+  margin-bottom: 10px;
+}
+.rgj-help-section {
+  margin: 0 0 10px;
+  font-size: 11px;
+  font-weight: 600;
+  text-transform: uppercase;
+  letter-spacing: 0.04em;
+  color: var(--rgj-text-muted);
+}
+.rgj-tour-list {
+  display: flex;
+  flex-direction: column;
+  gap: 8px;
+}
+.rgj-tour-card {
+  display: flex;
+  align-items: center;
+  justify-content: space-between;
+  gap: 12px;
+  border: 1px solid var(--rgj-border);
+  border-radius: 10px;
+  padding: 12px;
+}
+.rgj-tour-name {
+  margin: 0;
+  font-size: 13px;
+  font-weight: 500;
+}
+.rgj-tour-desc {
+  margin: 2px 0 0;
+  font-size: 12px;
+  color: var(--rgj-text-muted);
+}
+.rgj-tour-done {
+  display: inline-block;
+  margin-top: 4px;
+  font-size: 11px;
+  font-weight: 600;
+  color: #16a34a;
+}
+
+/* Welcome modal */
+.rgj-welcome {
+  position: fixed;
+  left: 50%;
+  top: 50%;
+  transform: translate(-50%, -50%);
+  z-index: calc(var(--rgj-z) + 4);
+  width: 440px;
+  max-width: calc(100vw - 32px);
+  background: var(--rgj-surface);
+  color: var(--rgj-text);
+  border-radius: var(--rgj-radius);
+  box-shadow: var(--rgj-shadow);
+  padding: 28px;
+}
+.rgj-welcome-title {
+  margin: 0 0 10px;
+  font-size: 20px;
+  font-weight: 700;
+}
+.rgj-welcome-body {
+  font-size: 14px;
+  line-height: 1.6;
+  color: var(--rgj-text-muted);
+}
+.rgj-welcome-actions {
+  display: flex;
+  align-items: center;
+  justify-content: flex-end;
+  gap: 12px;
+  margin-top: 24px;
+}
+
+/* Discovery tip */
+.rgj-discovery {
+  --rgj-tip: var(--rgj-primary);
+  display: flex;
+  align-items: flex-start;
+  gap: 12px;
+  border: 1px solid color-mix(in srgb, var(--rgj-tip) 28%, transparent);
+  background: color-mix(in srgb, var(--rgj-tip) 7%, var(--rgj-surface));
+  border-radius: 12px;
+  padding: 14px 16px;
+}
+.rgj-discovery-icon {
+  flex: none;
+  display: grid;
+  place-items: center;
+  width: 30px;
+  height: 30px;
+  border-radius: 9px;
+  font-size: 16px;
+  background: color-mix(in srgb, var(--rgj-tip) 16%, transparent);
+  color: var(--rgj-tip);
+}
+.rgj-discovery-main {
+  flex: 1;
+  min-width: 0;
+}
+.rgj-discovery-title {
+  margin: 0;
+  font-size: 13.5px;
+  font-weight: 600;
+  color: var(--rgj-text);
+}
+.rgj-discovery-text {
+  margin: 3px 0 0;
+  font-size: 12.5px;
+  line-height: 1.5;
+  color: var(--rgj-text-muted);
+}
+.rgj-discovery-action {
+  margin-top: 10px;
+}
+
+/*
+ * Floating (pinned) tip variants.
+ * Offsets are CSS variables so apps can nudge them — e.g. set
+ * `--rgj-tip-top: 76px` to clear a sticky header. `bottom-right` is raised by
+ * default to sit ABOVE the checklist pill (which lives in that corner).
+ */
+.rgj-discovery-float {
+  --rgj-tip-gap: 20px;
+  --rgj-tip-top: var(--rgj-tip-gap);
+  --rgj-tip-pill-clear: 76px; /* height the bottom-right pill occupies */
+  position: fixed;
+  z-index: calc(var(--rgj-z) + 3);
+  width: 320px;
+  max-width: calc(100vw - 32px);
+  box-shadow: var(--rgj-shadow);
+  background: var(--rgj-surface);
+  animation: rgj-pop 0.25s ease both;
+}
+.rgj-discovery-bottom-right {
+  right: var(--rgj-tip-gap);
+  bottom: calc(var(--rgj-tip-gap) + var(--rgj-tip-pill-clear));
+}
+.rgj-discovery-bottom-left {
+  left: var(--rgj-tip-gap);
+  bottom: var(--rgj-tip-gap);
+}
+.rgj-discovery-top-right {
+  right: var(--rgj-tip-gap);
+  top: var(--rgj-tip-top);
+}
+.rgj-discovery-top-left {
+  left: var(--rgj-tip-gap);
+  top: var(--rgj-tip-top);
+}
+
+/* Tour debug warning (only shown when config.debug is on) */
+.rgj-warn {
+  margin-top: 12px;
+  padding: 10px 12px;
+  border-radius: 8px;
+  font-size: 12px;
+  line-height: 1.5;
+  color: #92400e;
+  background: #fef3c7;
+  border: 1px solid #fcd34d;
+}
+.rgj-warn code {
+  font-family: ui-monospace, monospace;
+  background: rgba(0, 0, 0, 0.08);
+  padding: 0 4px;
+  border-radius: 4px;
+}
+.rgj-warn span {
+  display: block;
+  margin-top: 4px;
+  opacity: 0.85;
+}
+
+@keyframes rgj-fade {
+  from {
+    opacity: 0;
+  }
+  to {
+    opacity: 1;
+  }
+}
+@keyframes rgj-pop {
+  from {
+    opacity: 0;
+    transform: scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: scale(1);
+  }
+}
+@keyframes rgj-slide {
+  from {
+    transform: translateX(100%);
+  }
+  to {
+    transform: translateX(0);
+  }
+}
+
+/* The welcome modal keeps its translate centering during the pop animation. */
+.rgj-welcome.rgj-in {
+  animation: rgj-welcome-pop 0.2s ease both;
+}
+@keyframes rgj-welcome-pop {
+  from {
+    opacity: 0;
+    transform: translate(-50%, -50%) scale(0.96);
+  }
+  to {
+    opacity: 1;
+    transform: translate(-50%, -50%) scale(1);
+  }
+}
+
+@media (max-width: 480px) {
+  .rgj-checklist,
+  .rgj-pill {
+    right: 12px;
+    bottom: 12px;
+  }
+  .rgj-help {
+    width: 100vw;
+  }
+}

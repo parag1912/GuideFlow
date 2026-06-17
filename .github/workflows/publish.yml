@@ -1,0 +1,39 @@
+name: Publish to npm
+
+# Publishes when you create a GitHub Release (which points at a tag).
+# This is safer than publishing on every push to main — you publish
+# deliberately, and the release tag matches the version.
+on:
+  release:
+    types: [published]
+
+permissions:
+  contents: read
+  id-token: write # enables npm provenance (supply-chain attestation)
+
+jobs:
+  publish:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+
+      - uses: actions/setup-node@v4
+        with:
+          node-version: 20
+          registry-url: "https://registry.npmjs.org"
+
+      - run: npm ci
+      - run: npm run build
+
+      # Fails fast if package.json version doesn't match the release tag.
+      - name: Verify version matches tag
+        run: |
+          PKG=$(node -p "require('./package.json').version")
+          TAG="${GITHUB_REF_NAME#v}"
+          if [ "$PKG" != "$TAG" ]; then
+            echo "::error::package.json ($PKG) != tag ($TAG)"; exit 1
+          fi
+
+      - run: npm publish --provenance --access public
+        env:
+          NODE_AUTH_TOKEN: ${{ secrets.NPM_TOKEN }}
