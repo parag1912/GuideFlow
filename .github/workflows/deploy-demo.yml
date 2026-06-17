@@ -36,7 +36,7 @@ jobs:
         # BASE must match the repo name for a project Pages site:
         # https://<user>.github.io/<repo>/  →  base "/<repo>/"
         env:
-          BASE: /react-guided-journey/
+          BASE: /GuideFlow/
         run: npm run build
 
       - name: Upload Pages artifact
